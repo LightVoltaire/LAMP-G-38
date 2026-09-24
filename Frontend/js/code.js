@@ -1,6 +1,4 @@
-const urlBase = (typeof window !== 'undefined' && window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.origin.includes('lampproject38')))
-  ? '/api/index.php'
-  : 'http://142.93.57.56/api/index.php';
+const urlBase = '/api/index.php';
 
 const loginUrlBase = urlBase;
 
@@ -16,7 +14,7 @@ function doLogin() {
   let loginInput = document.getElementById("loginName");
   let passwordInput = document.getElementById("loginPassword");
   let login = loginInput ? loginInput.value.trim() : "";
-  let password = passwordInput ? passwordInput.value.trim() : "";
+  let password = passwordInput ? passwordInput.value : "";
 
   document.getElementById("loginResult").innerHTML = "";
 
@@ -66,7 +64,7 @@ function doRegister(){
   let fName = firstNameInput ? firstNameInput.value.trim() : "";
   let lName = lastNameInput ? lastNameInput.value.trim() : "";
   let login = loginInput ? loginInput.value.trim() : "";
-  let password = passwordInput ? passwordInput.value.trim() : "";
+  let password = passwordInput ? passwordInput.value : "";
 
   resultEl.innerHTML = "";
   resultEl.className = "small fw-semibold";
@@ -175,20 +173,23 @@ function readCookie() {
   } else {
     let userNameEl = document.getElementById("userName");
     if (userNameEl) {
-      userNameEl.innerHTML = `<i class="bi bi-person-circle me-1 text-primary"></i> <span>Logged in as <strong class="text-white">${firstName} ${lastName}</strong></span>`;
+      userNameEl.textContent = `Logged in as ${firstName} ${lastName}`;
     }
-    searchColor();
+    searchContacts();
   }
 }
 
-function doLogout() {
-  userId = 0;
-  firstName = "";
-  lastName = "";
-  document.cookie = "firstName=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
-  document.cookie = "lastName=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
-  document.cookie = "userId=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
-  window.location.href = "index.html";
+async function doLogout() {
+  try {
+    await fetch(urlBase, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "logout" })
+    });
+  } finally {
+    document.cookie = "firstName=; Max-Age=0; path=/";
+    window.location.href = "index.html";
+  }
 }
 
 // function addColor() {

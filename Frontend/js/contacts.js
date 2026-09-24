@@ -30,14 +30,21 @@ function renderContacts(contacts) {
     const phone = c.phone ?? c.Phone ?? "";
 
     const tr = document.createElement("tr");
-    tr.innerHTML =
-      `<td>${escapeHtml(first)} ${escapeHtml(last)}</td>` +
-      `<td>${escapeHtml(email)}</td>` +
-      `<td>${escapeHtml(phone)}</td>` +
-      `<td class="text-end">` +
-      `<button type="button" class="btn btn-sm btn-outline-light me-1" onclick="openEditContact(${JSON.stringify(id)}, '${escapeAttr(first)}', '${escapeAttr(last)}', '${escapeAttr(email)}', '${escapeAttr(phone)}')" title="Edit"><i class="bi bi-pencil"></i></button>` +
-      `<button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteContact(${JSON.stringify(id)})" title="Delete"><i class="bi bi-trash"></i></button>` +
-      `</td>`;
+    tr.innerHTML = `<td>${escapeHtml(first)} ${escapeHtml(last)}</td>` +
+      `<td>${escapeHtml(email)}</td><td>${escapeHtml(phone)}</td>` +
+      `<td class="text-end"></td>`;
+    const cell = tr.lastElementChild;
+    const editButton = document.createElement("button");
+    editButton.type = "button";
+    editButton.className = "btn btn-sm btn-outline-light me-1";
+    editButton.textContent = "Edit";
+    editButton.addEventListener("click", () => openEditContact(id, first, last, email, phone));
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "btn btn-sm btn-outline-danger";
+    deleteButton.textContent = "Delete";
+    deleteButton.addEventListener("click", () => deleteContact(id));
+    cell.append(editButton, deleteButton);
     tbody.appendChild(tr);
   });
 }
@@ -53,8 +60,6 @@ function searchContacts() {
 
   let xhr = new XMLHttpRequest();
   xhr.open("GET", url, true);
-  xhr.setRequestHeader("Authorization", "Bearer " + userId);
-  xhr.setRequestHeader("X-User-Id", userId);
 
   xhr.onreadystatechange = function () {
     if (this.readyState === 4) {
@@ -66,6 +71,7 @@ function searchContacts() {
         let contacts = jsonObject.contacts || jsonObject.results || [];
         renderContacts(contacts);
       } else {
+        if (this.status === 401) { window.location.href = "index.html"; return; }
         if (resultSpan) resultSpan.innerHTML = "<span class='text-danger'><i class='bi bi-exclamation-circle-fill me-1'></i>Couldn't load contacts.</span>";
       }
     }
@@ -93,8 +99,6 @@ function addContact() {
   let xhr = new XMLHttpRequest();
   xhr.open("POST", urlBase, true);
   xhr.setRequestHeader("Content-type", "application/json; charset=UTF-8");
-  xhr.setRequestHeader("Authorization", "Bearer " + userId);
-  xhr.setRequestHeader("X-User-Id", userId);
 
   try {
     xhr.onreadystatechange = function () {
@@ -152,13 +156,11 @@ function updateContact() {
     return;
   }
 
-  let jsonPayload = JSON.stringify({ id: editingId, firstName: first, lastName: last, email: email, phone: phone });
+  let jsonPayload = JSON.stringify({ action: "contact", id: editingId, firstName: first, lastName: last, email: email, phone: phone });
 
   let xhr = new XMLHttpRequest();
   xhr.open("PUT", urlBase, true);
   xhr.setRequestHeader("Content-type", "application/json; charset=UTF-8");
-  xhr.setRequestHeader("Authorization", "Bearer " + userId);
-  xhr.setRequestHeader("X-User-Id", userId);
 
   xhr.onreadystatechange = function () {
     if (this.readyState === 4) {
@@ -187,8 +189,6 @@ function deleteContact(id) {
   let url = urlBase + "?id=" + encodeURIComponent(id);
   let xhr = new XMLHttpRequest();
   xhr.open("DELETE", url, true);
-  xhr.setRequestHeader("Authorization", "Bearer " + userId);
-  xhr.setRequestHeader("X-User-Id", userId);
 
   xhr.onreadystatechange = function () {
     if (this.readyState === 4) {
