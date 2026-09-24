@@ -1,1 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Contacts</title>
+  <link rel="icon" href="data:,">
+
+  <!-- Same libraries code.js's icon/utility classes (bi-*, fw-semibold, text-success...) expect -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body onload="readCookie()">
+
+  <nav class="navbar navbar-expand navbar-dark bg-body-tertiary border-bottom">
+    <div class="container">
+      <span class="navbar-brand d-flex align-items-center gap-2">
+        <i class="bi bi-person-lines-fill fs-4 text-primary"></i>
+        <span>Lamp Group 38 Contacts Project</span>
+      </span>
+      <div class="d-flex align-items-center gap-3">
+        <span id="userName" class="small"></span>
+        <button type="button" class="btn btn-outline-light btn-sm" onclick="doLogout()">
+          <i class="bi bi-box-arrow-right me-1"></i>Log out
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container py-4">
+    <h1 class="h3 mb-4">My Contacts List</h1>
+
+    <!-- Making Contact Section-->
+    <div class="card mb-4">
+      <div class="card-body">
+        <!--Subtitle-->
+        <h2 class=>Add  Contact</h2>
+        <form id="addContactForm" onsubmit="event.preventDefault(); addContact();">
+          <div class="row g-2 align-items-end">
+            <div class="col-sm-6 col-lg-2">
+              <!--First Name in Text Box-->
+              <label class="form-label small" for="newFirstName">First Name</label>
+              <input class="form-control" id="newFirstName" type="text" placeholder="First Name">
+            </div>
+            <!--Last Name in Text Box-->
+            <div class="col-sm-6 col-lg-2">
+              <label class="form-label small" for="newLastName">Last Name</label>
+              <input class="form-control" id="newLastName" type="text" placeholder="Last Name">
+            </div>
+            <div class="col-sm-6 col-lg-3">
+              <label class="form-label small" for="newEmail">Email</label>
+              <input class="form-control" id="newEmail" type="email" placeholder="Email">
+            </div>
+            <div class="col-sm-6 col-lg-3">
+              <label class="form-label small" for="newPhone">Phone</label>
+              <input class="form-control" id="newPhone" type="tel" placeholder="(123)-456-7890">
+            </div>
+            <div class="col-lg-2 d-grid">
+              <button type="submit" class="btn btn-primary">
+                <i class=></i>Add
+              </button>
+            </div>
+          </div>
+          <div id="contactAddResult" class="mt-2"></div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Search table -->
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+          <div class="input-group" style="max-width: 360px;">
+            <span class="input-group-text bg-body-secondary"><i class="bi bi-search"></i></span>
+            <input class="form-control" id="searchText" type="search" placeholder="Search contacts" oninput="searchContacts()">
+          </div>
+          <span id="contactsSearchResult" class="small"></span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <!-- Table Headers-->
+                <th scope="col">Name</th>
+                <th scope="col">Email</th>
+                <th scope="col">Phone</th>
+                <th scope="col" class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="contactsBody"></tbody>
+          </table>
+        </div>
+        <!--Situation in which the Contact List is Empty-->
+        <div id="contactsEmpty" class="text-center text-secondary py-5 d-none">
+          <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+          You have no contacts yet. Add your first one above!
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Edit contact -->
+  <div class="modal fade" id="editContactModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title h5">Edit contact</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="editContactResult" class="mb-2"></div>
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <label class="form-label small" for="editFirstName">First Name</label>
+              <input class="form-control" id="editFirstName" type="text">
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label small" for="editLastName">Last Name</label>
+              <input class="form-control" id="editLastName" type="text">
+            </div>
+            <div class="col-12">
+              <label class="form-label small" for="editEmail">Email</label>
+              <input class="form-control" id="editEmail" type="email">
+            </div>
+            <div class="col-12">
+              <label class="form-label small" for="editPhone">Phone</label>
+              <input class="form-control" id="editPhone" type="tel">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="updateContact()">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- DEMO with fake data contact. -->
+  <script src="demo-data.js"></script>
+
+  <!-- code.js and contacts.js -->
+  <script src="code.js"></script>
+  <script src="contacts.js"></script>
+</body>
+</html>
 
