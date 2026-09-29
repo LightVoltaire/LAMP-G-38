@@ -1,4 +1,6 @@
-const urlBase = '/api/index.php';
+const urlBase = (typeof window !== 'undefined' && window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.origin.includes('lampproject38')))
+  ? '/api/index.php'
+  : 'http://142.93.57.56/api/index.php';
 
 const loginUrlBase = urlBase;
 
@@ -14,7 +16,7 @@ function doLogin() {
   let loginInput = document.getElementById("loginName");
   let passwordInput = document.getElementById("loginPassword");
   let login = loginInput ? loginInput.value.trim() : "";
-  let password = passwordInput ? passwordInput.value : "";
+  let password = passwordInput ? passwordInput.value.trim() : "";
 
   document.getElementById("loginResult").innerHTML = "";
 
@@ -41,10 +43,11 @@ function doLogin() {
           lastName = jsonObject.lastName;
 
           saveCookie();
-          window.location.href = "contacts.html";
+          window.location.href = jsonObject.role === "admin" ? "admin.html" : "contacts.html";
         } else {
-          document.getElementById("loginResult").innerHTML =
-            "<i class='bi bi-exclamation-circle-fill me-1'></i> Login failed";
+          let response = {};
+          try { response = JSON.parse(xhr.responseText); } catch (_) { /* Show fallback below. */ }
+          document.getElementById("loginResult").textContent = response.error || "Login failed";
         }
       }
     };
@@ -64,7 +67,7 @@ function doRegister(){
   let fName = firstNameInput ? firstNameInput.value.trim() : "";
   let lName = lastNameInput ? lastNameInput.value.trim() : "";
   let login = loginInput ? loginInput.value.trim() : "";
-  let password = passwordInput ? passwordInput.value : "";
+  let password = passwordInput ? passwordInput.value.trim() : "";
 
   resultEl.innerHTML = "";
   resultEl.className = "small fw-semibold";
@@ -102,7 +105,7 @@ function doRegister(){
           // Check if your API returns an error field in the payload
           if (jsonObject.error && jsonObject.error.length > 0) {
             resultEl.className = "small fw-semibold text-danger";
-            resultEl.innerHTML = `<i class='bi bi-exclamation-circle-fill me-1'></i> ${jsonObject.error}`;
+            resultEl.textContent = jsonObject.error;
             return;
           }
 
@@ -118,7 +121,7 @@ function doRegister(){
           try {
             let jsonObject = JSON.parse(xhr.responseText);
             resultEl.className = "small fw-semibold text-danger";
-            resultEl.innerHTML = `<i class='bi bi-exclamation-circle-fill me-1'></i> ${jsonObject.error || "Registration failed."}`;
+            resultEl.textContent = jsonObject.error || "Registration failed.";
           } catch (e) {
             resultEl.className = "small fw-semibold text-danger";
             resultEl.innerHTML = "<i class='bi bi-exclamation-circle-fill me-1'></i> Registration failed.";
@@ -133,63 +136,122 @@ function doRegister(){
   }  
 }
 
+// ADMIN LOGIN
+function doAdminLogin() {
+  const loginInput = document.getElementById("adminLoginName");
+  const passwordInput = document.getElementById("adminLoginPassword");
+  const resultEl = document.getElementById("adminLoginResult");
+
+  const login = loginInput ? loginInput.value.trim() : "";
+  const password = passwordInput ? passwordInput.value.trim() : "";
+
+  if (resultEl) resultEl.innerHTML = "";
+
+  if (!login || !password) {
+    if (resultEl) {
+      resultEl.className = "small fw-semibold text-warning";
+      resultEl.innerHTML = "<i class='bi bi-exclamation-triangle-fill me-1'></i> Admin username and password are required.";
+    }
+    return;
+  }
+
+  const jsonPayload = JSON.stringify({ action: "login", login: login, password: password });
+
+  const xhr = new XMLHttpRequest();
+  xhr.open("POST", loginUrlBase, true);
+  xhr.setRequestHeader("Content-type", "application/json; charset=UTF-8");
+
+  try {
+    xhr.onreadystatechange = async function () {
+      if (this.readyState === 4) {
+        let jsonObject = {};
+        try {
+          jsonObject = JSON.parse(xhr.responseText);
+        } catch (e) {
+          jsonObject = {};
+        }
+
+        if (this.status === 200 && jsonObject.id > 0 && jsonObject.role !== "admin") {
+          await fetch('/api/index.php', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'logout' }) }).catch(() => {});
+          if (resultEl) {
+            resultEl.className = "small fw-semibold text-danger";
+            resultEl.textContent = "This account is not an admin. Use regular sign in.";
+          }
+          return;
+        }
+        if (this.status === 200 && jsonObject.id > 0 && jsonObject.role === "admin") {
+          userId = jsonObject.id;
+          firstName = jsonObject.firstName;
+          lastName = jsonObject.lastName;
+
+          saveCookie();
+          // Redirect to contacts or admin dashboard
+          window.location.href = "admin.html";
+        } else {
+          if (resultEl) {
+            resultEl.className = "small fw-semibold text-danger";
+            resultEl.textContent = jsonObject.error || "Authentication failed";
+          }
+        }
+      }
+    };
+    xhr.send(jsonPayload);
+  } catch (err) {
+    if (resultEl) {
+      resultEl.className = "small fw-semibold text-danger";
+      resultEl.innerHTML = err.message;
+    }
+  }
+}
+
+// --- SESSION / COOKIE MANAGEMENT ---
+
 function saveCookie() {
-  let minutes = 20;
-  let date = new Date();
+  const minutes = 30;
+  const date = new Date();
   date.setTime(date.getTime() + minutes * 60 * 1000);
-  document.cookie =
-    "firstName=" +
-    encodeURIComponent(firstName) +
-    ",lastName=" +
-    encodeURIComponent(lastName) +
-    ",userId=" +
-    userId +
-    ";expires=" +
-    date.toGMTString() +
-    ";path=/";
+  document.cookie = `userId=${userId};expires=${date.toUTCString()};path=/;SameSite=Lax`;
+  document.cookie = `firstName=${encodeURIComponent(firstName)};expires=${date.toUTCString()};path=/;SameSite=Lax`;
+  document.cookie = `lastName=${encodeURIComponent(lastName)};expires=${date.toUTCString()};path=/;SameSite=Lax`;
 }
 
 function readCookie() {
   userId = -1;
-  let data = document.cookie;
-  let splits = data.split(";");
-  for (var i = 0; i < splits.length; i++) {
-    let pair = splits[i].trim();
-    let tokens = pair.split(",");
-    for (var j = 0; j < tokens.length; j++) {
-      let keyVal = tokens[j].trim().split("=");
-      if (keyVal[0] === "firstName") {
-        firstName = decodeURIComponent(keyVal[1] || "");
-      } else if (keyVal[0] === "lastName") {
-        lastName = decodeURIComponent(keyVal[1] || "");
-      } else if (keyVal[0] === "userId") {
-        userId = parseInt(keyVal[1].trim());
-      }
+  const cookies = document.cookie.split(";");
+
+  for (let i = 0; i < cookies.length; i++) {
+    const [key, val] = cookies[i].trim().split("=");
+    if (key === "userId") {
+      userId = parseInt(val, 10);
+    } else if (key === "firstName") {
+      firstName = decodeURIComponent(val || "");
+    } else if (key === "lastName") {
+      lastName = decodeURIComponent(val || "");
     }
   }
 
-  if (userId < 0 || isNaN(userId)) {
+  if (userId <= 0 || isNaN(userId)) {
     window.location.href = "index.html";
   } else {
-    let userNameEl = document.getElementById("userName");
+    const userNameEl = document.getElementById("userName");
     if (userNameEl) {
-      userNameEl.textContent = `Logged in as ${firstName} ${lastName}`;
+      userNameEl.innerHTML = `<i class="bi bi-person-circle me-1 text-primary"></i> <span>Logged in as <strong class="text-white">${firstName} ${lastName}</strong></span>`;
     }
-    searchContacts();
+    loadContacts();
   }
 }
 
 async function doLogout() {
   try {
-    await fetch(urlBase, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "logout" })
-    });
-  } finally {
-    document.cookie = "firstName=; Max-Age=0; path=/";
-    window.location.href = "index.html";
-  }
+    await fetch('/api/index.php', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'logout' }) });
+  } catch (_) { /* Clear the local UI even if the request fails. */ }
+  userId = 0;
+  firstName = "";
+  lastName = "";
+  document.cookie = "firstName=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+  document.cookie = "lastName=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+  document.cookie = "userId=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+  window.location.href = "index.html";
 }
 
 // function addColor() {
