@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - COP 4331</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5.3 & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
+    <link rel="alternate icon" href="favicon.ico">
+    <!-- Custom Styles -->
+    <link href="css/styles.css" rel="stylesheet">
+    <!-- Scripts -->
+    <script type="text/javascript" src="js/code.js"></script>
+</head>
+<body class="d-flex align-items-center justify-content-center min-vh-100 py-5">
+    <div class="background-glow"></div>
+    <main class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-sm-10 col-md-8 col-lg-5">
+                
+                <!-- Title Header -->
+                <div class="text-center mb-4">
+                    <div class="app-icon-wrapper mb-3 mx-auto text-warning">
+                        <i class="bi bi-shield-lock-fill"></i>
+                    </div>
+                    <h1 id="title" class="fw-bold tracking-tight">COP 4331 LAMP Stack</h1>
+                    <p class="text-secondary-contrast small">Admin Management Portal</p>
+                </div>
+
+                <!-- Admin Card -->
+                <div id="adminLoginDiv" class="card glass-card shadow-lg border-0 p-4 p-sm-5 border-top border-warning border-2">
+                    <div class="card-body p-0">
+                        <div class="text-center mb-4">
+                            <span class="badge bg-warning-subtle text-warning border border-warning px-3 py-1 mb-2 text-uppercase tracking-wider">
+                                Restricted Access
+                            </span>
+                            <span id="inner-title" class="d-block fw-semibold text-uppercase tracking-wider fs-5">Admin Sign In</span>
+                        </div>
+                        
+                        <form id="adminLoginForm" onsubmit="event.preventDefault(); doAdminLogin();" class="needs-validation">
+                            <!-- Admin Username -->
+                            <div class="mb-3">
+                                <label for="adminLoginName" class="form-label form-label-contrast small">Admin Username</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-person-badge text-secondary-contrast"></i></span>
+                                    <input type="text" id="adminLoginName" class="form-control" placeholder="Enter admin username" required />
+                                </div>
+                            </div>
+                            
+                            <!-- Admin Password -->
+                            <div class="mb-4">
+                                <label for="adminLoginPassword" class="form-label form-label-contrast small">Admin Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-key-fill text-secondary-contrast"></i></span>
+                                    <input type="password" id="adminLoginPassword" class="form-control" placeholder="Enter admin password" required />
+                                </div>
+                            </div>
+
+                            <!-- Login Button -->
+                            <button type="submit" id="adminLoginButton" class="buttons btn btn-warning text-dark w-100 py-3 fw-bold rounded-3 shadow-sm d-flex align-items-center justify-content-center gap-2">
+                                <span>Authenticate</span>
+                                <i class="bi bi-box-arrow-in-right"></i>
+                            </button>
+                        </form>
+
+                        <!-- Back to User Login / Signup -->
+                        <div class="text-center mt-4">
+                            <span class="small text-secondary-contrast">
+                                Regular User?
+                                <a href="index.html" class="text-decoration-none fw-semibold">User Sign In</a>
+                                &bull;
+                                <a href="signup.html" class="text-decoration-none fw-semibold">Sign Up</a>
+                            </span>
+                        </div>
+
+                        <!-- Feedback Message -->
+                        <div class="mt-3 text-center">
+                            <span id="adminLoginResult" class="small fw-semibold"></span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
