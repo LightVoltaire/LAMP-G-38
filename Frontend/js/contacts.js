@@ -30,13 +30,14 @@ function renderContacts(contacts) {
     const phone = c.phone ?? c.Phone ?? "";
 
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${escapeHtml(first)} ${escapeHtml(last)}</td>` +
-      `<td>${escapeHtml(email)}</td><td>${escapeHtml(phone)}</td>` +
-      `<td class="text-end"></td>`;
-    const cell = tr.lastElementChild;
+    const initials = `${Array.from(String(first).trim())[0] || ""}${Array.from(String(last).trim())[0] || ""}`.toLocaleUpperCase() || "?";
+    tr.innerHTML = `<td><div class="contact-identity"><span class="contact-avatar" aria-hidden="true">${escapeHtml(initials)}</span><span class="contact-name">${escapeHtml(`${first} ${last}`.trim() || "Unnamed contact")}</span></div></td>` +
+      `<td><a class="contact-detail" href="mailto:${encodeURIComponent(email)}">${escapeHtml(email)}</a><a class="contact-detail" href="tel:${escapeHtml(phone.replace(/[^+\d]/g, ""))}">${escapeHtml(phone)}</a></td>` +
+      `<td class="text-end"><span class="contact-action-group"></span></td>`;
+    const cell = tr.querySelector(".contact-action-group");
     const editButton = document.createElement("button");
     editButton.type = "button";
-    editButton.className = "btn btn-sm btn-outline-light me-1";
+    editButton.className = "btn btn-sm btn-outline-light";
     editButton.textContent = "Edit";
     editButton.addEventListener("click", () => openEditContact(id, first, last, email, phone));
     const deleteButton = document.createElement("button");
@@ -48,6 +49,10 @@ function renderContacts(contacts) {
     tbody.appendChild(tr);
   });
 }
+
+// The teammate's code.js currently calls loadContacts() on page load.
+// The contact API search below is the same initial-load request.
+function loadContacts() { searchContacts(); }
 
 //  Search (Loads inital)  
 function searchContacts() {

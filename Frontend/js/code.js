@@ -43,10 +43,11 @@ function doLogin() {
           lastName = jsonObject.lastName;
 
           saveCookie();
-          window.location.href = "contacts.html";
+          window.location.href = jsonObject.role === "admin" ? "admin.html" : "contacts.html";
         } else {
-          document.getElementById("loginResult").innerHTML =
-            "<i class='bi bi-exclamation-circle-fill me-1'></i> Login failed";
+          let response = {};
+          try { response = JSON.parse(xhr.responseText); } catch (_) { /* Show fallback below. */ }
+          document.getElementById("loginResult").textContent = response.error || "Login failed";
         }
       }
     };
@@ -104,7 +105,7 @@ function doRegister(){
           // Check if your API returns an error field in the payload
           if (jsonObject.error && jsonObject.error.length > 0) {
             resultEl.className = "small fw-semibold text-danger";
-            resultEl.innerHTML = `<i class='bi bi-exclamation-circle-fill me-1'></i> ${jsonObject.error}`;
+            resultEl.textContent = jsonObject.error;
             return;
           }
 
@@ -120,7 +121,7 @@ function doRegister(){
           try {
             let jsonObject = JSON.parse(xhr.responseText);
             resultEl.className = "small fw-semibold text-danger";
-            resultEl.innerHTML = `<i class='bi bi-exclamation-circle-fill me-1'></i> ${jsonObject.error || "Registration failed."}`;
+            resultEl.textContent = jsonObject.error || "Registration failed.";
           } catch (e) {
             resultEl.className = "small fw-semibold text-danger";
             resultEl.innerHTML = "<i class='bi bi-exclamation-circle-fill me-1'></i> Registration failed.";
@@ -161,7 +162,7 @@ function doAdminLogin() {
   xhr.setRequestHeader("Content-type", "application/json; charset=UTF-8");
 
   try {
-    xhr.onreadystatechange = function () {
+    xhr.onreadystatechange = async function () {
       if (this.readyState === 4) {
         let jsonObject = {};
         try {
@@ -170,18 +171,26 @@ function doAdminLogin() {
           jsonObject = {};
         }
 
-        if (this.status === 200 && jsonObject.id > 0) {
+        if (this.status === 200 && jsonObject.id > 0 && jsonObject.role !== "admin") {
+          await fetch('/api/index.php', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'logout' }) }).catch(() => {});
+          if (resultEl) {
+            resultEl.className = "small fw-semibold text-danger";
+            resultEl.textContent = "This account is not an admin. Use regular sign in.";
+          }
+          return;
+        }
+        if (this.status === 200 && jsonObject.id > 0 && jsonObject.role === "admin") {
           userId = jsonObject.id;
           firstName = jsonObject.firstName;
           lastName = jsonObject.lastName;
 
           saveCookie();
           // Redirect to contacts or admin dashboard
-          window.location.href = "contacts.html";
+          window.location.href = "admin.html";
         } else {
           if (resultEl) {
             resultEl.className = "small fw-semibold text-danger";
-            resultEl.innerHTML = `<i class='bi bi-shield-x me-1'></i> ${jsonObject.error || "Authentication failed"}`;
+            resultEl.textContent = jsonObject.error || "Authentication failed";
           }
         }
       }
@@ -232,7 +241,10 @@ function readCookie() {
   }
 }
 
-function doLogout() {
+async function doLogout() {
+  try {
+    await fetch('/api/index.php', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'logout' }) });
+  } catch (_) { /* Clear the local UI even if the request fails. */ }
   userId = 0;
   firstName = "";
   lastName = "";
